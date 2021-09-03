@@ -33,7 +33,7 @@ namespace CRUDWithIssuesCore
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            string con = Configuration.GetConnectionString("schoolcruddb");
+            string con = Configuration.GetConnectionString("schoolCRUDDb");
             services.AddDbContext<SchoolContext>
                 (
                     options => options.UseSqlServer(con)

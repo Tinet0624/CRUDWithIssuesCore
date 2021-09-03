@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,40 +8,47 @@ namespace CRUDWithIssuesCore.Models
 {
     public static class StudentDb
     {
-        public static Student Add(Student p, SchoolContext db)
+        public static async Task<Student> Add(Student p, SchoolContext db)
         {
             //Add student to context
             db.Students.Add(p);
+            await db.SaveChangesAsync();
             return p;
         }
 
-        public static List<Student> GetStudents(SchoolContext context)
+        public static async Task<List<Student>> GetStudentsAsync(SchoolContext context)
         {
-            return (from s in context.Students
-                    select s).ToList();
+            return await (from s in context.Students
+                    select s).ToListAsync();
         }
 
-        public static Student GetStudent(SchoolContext context, int id)
+        public static async Task<Student> GetStudentAsync(SchoolContext context, int id)
         {
-            Student p2 = context
+            Student p2 = await (context
                             .Students
-                            .Where(s => s.StudentId == id)
-                            .Single();
+                            .Where(s => s.StudentId == id))
+                            .SingleOrDefaultAsync();
             return p2;
         }
 
-        public static void Delete(SchoolContext context, Student p)
+        public static async void Delete(SchoolContext context, Student p)
         {
-            context.Students.Update(p);
+            // Should delete
+            context.Entry(p).State = EntityState.Deleted;
+            await context.SaveChangesAsync();
         }
 
-        public static void Update(SchoolContext context, Student p)
+        public static async Task<Student> Update(SchoolContext context, Student p)
         {
+            // should update not delete....
             //Mark the object as deleted
-            context.Students.Remove(p);
+            //context.Students.Remove(p);
+            context.Entry(p).State = EntityState.Modified;
 
             //Send delete query to database
-            context.SaveChanges();
+            await context.SaveChangesAsync();
+
+            return p;
         }
     }
 }

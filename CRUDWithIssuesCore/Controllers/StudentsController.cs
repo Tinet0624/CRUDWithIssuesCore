@@ -4,22 +4,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using CRUDWithIssuesCore.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CRUDWithIssuesCore.Controllers
 {
     public class StudentsController : Controller
     {
-        private readonly SchoolContext context;
+        private readonly SchoolContext _context;
 
         public StudentsController(SchoolContext dbContext)
         {
-            context = dbContext;
+            _context = dbContext;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            List<Student> products = StudentDb.GetStudents(context);
-            return View();
+            List<Student> products = await StudentDb.GetStudentsAsync(_context);
+            return View(products);
         }
 
         public IActionResult Create()
@@ -28,11 +29,11 @@ namespace CRUDWithIssuesCore.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Student p)
+        public async Task<IActionResult> Create(Student p)
         {
             if (ModelState.IsValid)
             {
-                StudentDb.Add(p, context);
+                await StudentDb.Add(p, _context);
                 ViewData["Message"] = $"{p.Name} was added!";
                 return View();
             }
@@ -41,21 +42,21 @@ namespace CRUDWithIssuesCore.Controllers
             return View(p);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
             //get the product by id
-            Student p = StudentDb.GetStudent(context, id);
+            Student p = await StudentDb.GetStudentAsync(_context, id);
 
             //show it on web page
-            return View();
+            return View(p);
         }
 
         [HttpPost]
-        public IActionResult Edit(Student p)
+        public async Task<IActionResult> Edit(Student p)
         {
             if (ModelState.IsValid)
             {
-                StudentDb.Update(context, p);
+                await StudentDb.Update(_context, p);
                 ViewData["Message"] = "Product Updated!";
                 return View(p);
             }
@@ -63,19 +64,20 @@ namespace CRUDWithIssuesCore.Controllers
             return View(p);
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            Student p = StudentDb.GetStudent(context, id);
+            Student p = await StudentDb.GetStudentAsync(_context, id);
             return View(p);
         }
 
         [HttpPost, ActionName("Delete")]
-        public IActionResult DeleteConfirm(int id)
+        public async Task<IActionResult> DeleteConfirm(int id)
         {
             //Get Product from database
-            Student p = StudentDb.GetStudent(context, id);
+            Student p = await StudentDb.GetStudentAsync(_context, id);
 
-            StudentDb.Delete(context, p);
+            _context.Entry(p).State = EntityState.Deleted;
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
